@@ -8,7 +8,8 @@ from .model_warmup import warmup_in_background
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    warmup_in_background()
+    # AI modelinin açılışda yüklənməsini müvəqqəti söndürürük (OOM-un qarşısını almaq üçün)
+    # warmup_in_background()
     yield
 
 app = FastAPI(title="VocalSplit AI API", lifespan=lifespan)
