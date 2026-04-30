@@ -4,14 +4,20 @@ import os
 db_path = os.path.join(os.path.dirname(__file__), "vocal_split.db")
 
 def migrate():
-    if not os.path.exists(db_path):
-        print(f"Database not found at {db_path}")
-        return
-
+    # Verilənlər bazası yoxdursa, sqlite3.connect onu avtomatik yaradacaq
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
     try:
+        # Cədvəllərin olub-olmadığını yoxlayaq və yaradaq
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS jobs (
+                id TEXT PRIMARY KEY,
+                filename TEXT,
+                status TEXT,
+                file_hash TEXT
+            )
+        """)
         # Check existing columns
         cursor.execute("PRAGMA table_info(jobs)")
         columns = [row[1] for row in cursor.fetchall()]
