@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+python-multipart
+sqlalchemy
+pydantic
+demucs
+aiofiles
+soundfile
+google-auth
