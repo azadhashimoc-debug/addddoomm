@@ -1,25 +1,31 @@
-# Python 3.10-un yüngül versiyasını götürürük
+# Python 3.10 istifadə edirik
 FROM python:3.10-slim
 
-# FFmpeg və digər sistem asılılıqlarını yükləyirik
+# FFmpeg və sistem kitabxanalarını yükləyirik
 RUN apt-get update && apt-get install -y \
     ffmpeg \
     libsndfile1 \
     && rm -rf /var/lib/apt/lists/*
 
-# İşçi qovluğu təyin edirik
-WORKDIR /app
+# Hugging Face üçün standart istifadəçi yaradırıq (UID 1000)
+RUN useradd -m -u 1000 user
+USER user
+ENV HOME=/home/user \
+    PATH=/home/user/.local/bin:$PATH \
+    PYTHONPATH=/code
 
-# Əvvəlcə requirements.txt-ni kopyalayırıq ki, cache-dən istifadə olunsun
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# İşçi qovluğunu /code təyin edirik
+WORKDIR /code
 
-# Bütün backend kodunu kopyalayırıq
-COPY . .
+# Asılılıqları kopyalayırıq və yükləyirik
+COPY --chown=user requirements.txt .
+RUN pip install --no-cache-dir --user -r requirements.txt
 
-# Lazımi qovluqların olduğundan əmin oluruq
-RUN mkdir -p data/uploads data/outputs
+# BÜTÜN faylları (app qovluğu daxil olmaqla) /code qovluğuna kopyalayırıq
+COPY --chown=user . .
 
-# Serveri işə salırıq.
-# Render bizə avtomatik $PORT dəyişəni verir.
-CMD ["sh", "-c", "python migrate_db.py && uvicorn app.main:app --host 0.0.0.0 --port $PORT"]
+# Port Hugging Face üçün 7860
+EXPOSE 7860
+
+# Serveri başladırıq
+CMD ["sh", "-c", "python migrate_db.py && python -m uvicorn app.main:app --host 0.0.0.0 --port 7860"]
